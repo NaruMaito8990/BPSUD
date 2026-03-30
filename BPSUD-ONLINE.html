@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluación de Uso del Smartphone</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: #f4f7fb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+}
+
+.card {
+  background: white;
+  padding: 35px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 720px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+h1 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #6b7280;
+  margin-bottom: 25px;
+}
+
+.box {
+  background: #f9fbff;
+  border: 1px solid #e5e7eb;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.center { text-align: center; }
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.primary {
+  background: #2563eb;
+  color: white;
+}
+
+.secondary {
+  background: #eee;
+}
+
+.progress {
+  height: 8px;
+  background: #eee;
+  border-radius: 10px;
+  margin: 15px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #2563eb;
+  width: 25%;
+}
+
+.question {
+  text-align: center;
+  font-size: 1.2rem;
+  margin: 20px 0;
+}
+
+.option {
+  display: block;
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.option input { display: none; }
+
+.option input:checked + span {
+  color: #2563eb;
+  font-weight: bold;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.result {
+  text-align: center;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.table th, .table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.table th {
+  background: #f1f5f9;
+}
+
+.footer {
+  margin-top: 25px;
+  font-size: 0.85rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<!-- LANDING -->
+<div id="landing" class="screen active">
+  <h1>Evaluá tu uso del smartphone</h1>
+  <p class="subtitle">Herramienta breve de autoevaluación.</p>
+
+  <div class="box">
+    Esta herramienta permite evaluar tu perfil de uso del teléfono móvil mediante una 
+    escala psicométrica validada en población universitaria argentina.
+
+    El cuestionario consta de 4 ítems y proporciona una clasificación orientativa 
+    sobre el nivel de uso problemático del smartphone.
+  </div>
+
+  <div class="center">
+    <button class="primary" onclick="start()">Hacer evaluación</button>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="screen">
+
+  <div id="progressText"></div>
+  <div class="progress">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <div id="question" class="question"></div>
+  <div id="options"></div>
+
+  <div class="nav">
+    <button class="secondary" onclick="prev()">Atrás</button>
+    <button class="primary" onclick="next()">Siguiente</button>
+  </div>
+
+</div>
+
+<!-- RESULT -->
+<div id="result" class="screen result">
+  <h2 id="score"></h2>
+  <h3 id="level"></h3>
+  <p id="text"></p>
+
+  <!-- TABLA -->
+  <table class="table">
+    <tr>
+      <th>Puntaje</th>
+      <th>Clasificación</th>
+    </tr>
+    <tr><td>4 – 9</td><td>Usuario casual</td></tr>
+    <tr><td>10 – 15</td><td>Usuario regular</td></tr>
+    <tr><td>16 – 17</td><td>Usuario en riesgo</td></tr>
+    <tr><td>18 – 20</td><td>Usuario problemático</td></tr>
+  </table>
+
+  <br>
+  <button class="primary" onclick="restart()">Volver al inicio</button>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+Lopez et al. (In press). Propiedades psicométricas de la Escala Breve de Uso Problemático y Dependencia del Smartphone en estudiantes universitarios argentinos
+<br><br>
+UADE – Universidad Argentina de la Empresa
+</div>
+
+</div>
+
+<script>
+
+const questions = [
+"Creo estar dependiendo excesivamente de mi teléfono.",
+"No podría vivir ni sobrevivir sin mi teléfono.",
+"No uso mi teléfono de manera adecuada en términos de tiempo y frecuencia.",
+"Mi necesidad de usar el teléfono mientras realizo otra tarea es motivo de preocupación."
+];
+
+const options = [
+"Totalmente en desacuerdo",
+"En desacuerdo",
+"Ni de acuerdo ni en desacuerdo",
+"De acuerdo",
+"Totalmente de acuerdo"
+];
+
+let step = 0;
+let answers = [null,null,null,null];
+
+function show(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function start(){
+  step=0;
+  show("quiz");
+  load();
+}
+
+function load(){
+  document.getElementById("question").innerText = questions[step];
+  document.getElementById("progressText").innerText = `Pregunta ${step+1} de 4`;
+  document.getElementById("progressFill").style.width = `${(step+1)*25}%`;
+
+  let html="";
+  options.forEach((opt,i)=>{
+    html+=`
+    <label class="option">
+      <input type="radio" name="q" value="${i+1}" ${answers[step]==i+1?"checked":""}>
+      <span>${opt}</span>
+    </label>`;
+  });
+
+  document.getElementById("options").innerHTML=html;
+
+  document.querySelectorAll('input[name="q"]').forEach(el=>{
+    el.onclick = ()=>answers[step]=Number(el.value);
+  });
+}
+
+function next(){
+  if(answers[step]==null){ alert("Respondé antes de continuar"); return;}
+
+  if(step<3){
+    step++;
+    load();
+  } else {
+    result();
+  }
+}
+
+function prev(){
+  if(step>0){
+    step--;
+    load();
+  }
+}
+
+function result(){
+  const total = answers.reduce((a,b)=>a+b,0);
+
+  let level="", text="";
+
+  if(total<=9){
+    level="Usuario casual";
+    text="Nivel bajo de uso problemático.";
+  } else if(total<=15){
+    level="Usuario regular";
+    text="Uso frecuente sin indicadores severos.";
+  } else if(total<=17){
+    level="Usuario en riesgo";
+    text="Uso elevado con posibles consecuencias negativas.";
+  } else {
+    level="Usuario problemático";
+    text="Nivel severo de uso problemático.";
+  }
+
+  document.getElementById("score").innerText=`Puntaje: ${total} de 20`;
+  document.getElementById("level").innerText=level;
+  document.getElementById("text").innerText=text;
+
+  show("result");
+}
+
+function restart(){
+  answers=[null,null,null,null];
+  show("landing");
+}
+
+</script>
+
+</body>
+</html>
